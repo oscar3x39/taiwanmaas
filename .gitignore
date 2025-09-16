@@ -5,6 +5,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.claude
 
 # Package lock files (keep only one type)
 # package-lock.json  # 取消註解如果使用 yarn
