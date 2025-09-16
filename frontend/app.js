@@ -307,49 +307,65 @@ class TransportApp {
             for (let i = 0; i < route.segments.length; i++) {
                 const segment = route.segments[i];
                 
-                // 根據段落類型繪製路徑
-                if (segment.mode === 'mrt' && segment.line && segment.stations) {
-                    // 使用真實捷運路線資料
-                    this.drawMRTSegment(segment);
-                } else if (segment.mode === 'walking') {
-                    // 步行路段
-                    this.drawWalkingSegment(segment);
-                } else if (segment.mode === 'bus') {
-                    // 公車路段
-                    this.drawBusSegment(segment);
-                } else if (segment.mode === 'taxi') {
-                    // 計程車路段
-                    await this.drawTaxiSegment(segment);
-                } else {
-                    // 其他交通工具，使用直線
+                try {
+                    // 根據段落類型繪製路徑
+                    if (segment.mode === 'mrt' && segment.line && segment.stations) {
+                        // 使用真實捷運路線資料
+                        this.drawMRTSegment(segment);
+                    } else if (segment.mode === 'walking') {
+                        // 步行路段
+                        await this.drawWalkingSegment(segment);
+                    } else if (segment.mode === 'bus') {
+                        // 公車路段
+                        await this.drawBusSegment(segment);
+                    } else if (segment.mode === 'taxi') {
+                        // 計程車路段
+                        await this.drawTaxiSegment(segment);
+                    } else {
+                        // 其他交通工具，使用直線
+                        this.drawGenericSegment(segment, colors[segment.mode.toLowerCase()] || '#667eea');
+                    }
+                } catch (error) {
+                    console.warn(`繪製路段 ${i} 時發生錯誤:`, error);
+                    // 備用方案：繪製直線
                     this.drawGenericSegment(segment, colors[segment.mode.toLowerCase()] || '#667eea');
                 }
             }
         } else {
-            // 如果沒有段落資訊，繪製直線路徑
-            const routePath = await this.getRouteGeometry(originCoords, destCoords, 'driving');
-            
-            if (routePath && routePath.length > 0) {
-                L.polyline(routePath, {
-                    color: '#667eea',
-                    weight: 5,
-                    opacity: 0.8
-                }).addTo(this.routeLayer);
-            } else {
+            // 如果沒有段落資訊，嘗試獲取真實路線
+            try {
+                const routePath = await this.getRouteGeometry(originCoords, destCoords, 'driving');
+                
+                if (routePath && routePath.length > 0) {
+                    L.polyline(routePath, {
+                        color: '#667eea',
+                        weight: 5,
+                        opacity: 0.8
+                    }).addTo(this.routeLayer);
+                } else {
+                    throw new Error('無法獲取路線幾何');
+                }
+            } catch (error) {
+                console.warn('無法獲取真實路線，使用直線路徑:', error);
                 L.polyline([
                     [originCoords.lat, originCoords.lng],
                     [destCoords.lat, destCoords.lng]
                 ], {
                     color: '#667eea',
                     weight: 5,
-                    opacity: 0.8
+                    opacity: 0.8,
+                    dashArray: '10, 10'
                 }).addTo(this.routeLayer);
             }
         }
     }
 
     drawMRTSegment(segment) {
-        if (!window.TAIPEI_MRT_DATA || !segment.stations) return;
+        if (!window.TAIPEI_MRT_DATA || !segment.stations) {
+            console.warn('捷運資料或站點資訊不完整，使用備用繪製方式');
+            this.drawGenericSegment(segment, '#007bff');
+            return;
+        }
         
         // 獲取捷運路線顏色
         const lineColor = TAIPEI_MRT_DATA.lines[segment.line]?.color || '#007bff';
@@ -357,7 +373,7 @@ class TransportApp {
         // 獲取站點路徑
         const stationPath = TAIPEI_MRT_DATA.getStationPath(segment.stations);
         
-        if (stationPath.length > 0) {
+        if (stationPath.length > 1) {
             // 繪製捷運路線
             const mrtLine = L.polyline(stationPath, {
                 color: lineColor,
@@ -372,73 +388,133 @@ class TransportApp {
             `);
             
             // 添加起終點站標記
-            if (stationPath.length >= 2) {
-                const startStation = L.circleMarker(stationPath[0], {
-                    color: lineColor,
-                    fillColor: '#fff',
-                    fillOpacity: 1,
-                    radius: 6,
-                    weight: 3
-                }).addTo(this.routeLayer);
-                
-                startStation.bindPopup(`<b>${segment.stations[0]}</b><br>上車站`);
-                
-                const endStation = L.circleMarker(stationPath[stationPath.length - 1], {
-                    color: lineColor,
-                    fillColor: '#fff',
-                    fillOpacity: 1,
-                    radius: 6,
-                    weight: 3
-                }).addTo(this.routeLayer);
-                
-                endStation.bindPopup(`<b>${segment.stations[segment.stations.length - 1]}</b><br>下車站`);
-            }
+            const startStation = L.circleMarker(stationPath[0], {
+                color: lineColor,
+                fillColor: '#fff',
+                fillOpacity: 1,
+                radius: 6,
+                weight: 3
+            }).addTo(this.routeLayer);
+            
+            startStation.bindPopup(`<b>${segment.stations[0]}</b><br>上車站`);
+            
+            const endStation = L.circleMarker(stationPath[stationPath.length - 1], {
+                color: lineColor,
+                fillColor: '#fff',
+                fillOpacity: 1,
+                radius: 6,
+                weight: 3
+            }).addTo(this.routeLayer);
+            
+            endStation.bindPopup(`<b>${segment.stations[segment.stations.length - 1]}</b><br>下車站`);
+        } else {
+            console.warn(`無法獲取 ${segment.line} 的站點路徑，使用備用繪製方式`);
+            this.drawGenericSegment(segment, lineColor);
         }
     }
 
-    drawWalkingSegment(segment) {
-        if (!segment.from || !segment.to) return;
+    async drawWalkingSegment(segment) {
+        if (!segment.from || !segment.to) {
+            console.warn('步行路段缺少起終點資訊');
+            return;
+        }
         
         const fromCoords = segment.from.coordinates;
         const toCoords = segment.to.coordinates;
         
-        const walkingPath = L.polyline([
-            [fromCoords.latitude, fromCoords.longitude],
-            [toCoords.latitude, toCoords.longitude]
-        ], {
-            color: '#28a745',
-            weight: 4,
-            opacity: 0.7,
-            dashArray: '8, 12'
-        }).addTo(this.routeLayer);
-        
-        walkingPath.bindPopup(`
-            <b>🚶 步行</b><br>
-            ${segment.from.name} → ${segment.to.name}<br>
-            ${segment.duration}分鐘 • ${segment.distance}km
-        `);
+        // 嘗試獲取步行路線
+        try {
+            const walkingPath = await this.getRouteGeometry(
+                { lat: fromCoords.latitude, lng: fromCoords.longitude },
+                { lat: toCoords.latitude, lng: toCoords.longitude },
+                'walking'
+            );
+            
+            if (walkingPath && walkingPath.length > 1) {
+                const polyline = L.polyline(walkingPath, {
+                    color: '#28a745',
+                    weight: 4,
+                    opacity: 0.7,
+                    dashArray: '8, 12'
+                }).addTo(this.routeLayer);
+                
+                polyline.bindPopup(`
+                    <b>🚶 步行</b><br>
+                    ${segment.from.name} → ${segment.to.name}<br>
+                    ${segment.duration}分鐘 • ${segment.distance}km
+                `);
+            } else {
+                throw new Error('無法獲取步行路線');
+            }
+        } catch (error) {
+            // 備用方案：直線路徑
+            const walkingPath = L.polyline([
+                [fromCoords.latitude, fromCoords.longitude],
+                [toCoords.latitude, toCoords.longitude]
+            ], {
+                color: '#28a745',
+                weight: 4,
+                opacity: 0.7,
+                dashArray: '8, 12'
+            }).addTo(this.routeLayer);
+            
+            walkingPath.bindPopup(`
+                <b>🚶 步行</b><br>
+                ${segment.from.name} → ${segment.to.name}<br>
+                ${segment.duration}分鐘 • ${segment.distance}km
+            `);
+        }
     }
 
-    drawBusSegment(segment) {
-        if (!segment.from || !segment.to) return;
+    async drawBusSegment(segment) {
+        if (!segment.from || !segment.to) {
+            console.warn('公車路段缺少起終點資訊');
+            return;
+        }
         
         const fromCoords = segment.from.coordinates;
         const toCoords = segment.to.coordinates;
         
-        const busPath = L.polyline([
-            [fromCoords.latitude, fromCoords.longitude],
-            [toCoords.latitude, toCoords.longitude]
-        ], {
-            color: '#ffc107',
-            weight: 5,
-            opacity: 0.8
-        }).addTo(this.routeLayer);
-        
-        busPath.bindPopup(`
-            <b>🚌 ${segment.line} 號公車</b><br>
-            ${segment.from.name} → ${segment.to.name}<br>
-            ${segment.duration}分鐘 • ${segment.distance}km
-        `);
+        // 嘗試獲取公車路線（使用道路路線）
+        try {
+            const busPath = await this.getRouteGeometry(
+                { lat: fromCoords.latitude, lng: fromCoords.longitude },
+                { lat: toCoords.latitude, lng: toCoords.longitude },
+                'driving'
+            );
+            
+            if (busPath && busPath.length > 1) {
+                const polyline = L.polyline(busPath, {
+                    color: '#ffc107',
+                    weight: 5,
+                    opacity: 0.8
+                }).addTo(this.routeLayer);
+                
+                polyline.bindPopup(`
+                    <b>🚌 ${segment.line} 號公車</b><br>
+                    ${segment.from.name} → ${segment.to.name}<br>
+                    ${segment.duration}分鐘 • ${segment.distance}km
+                `);
+            } else {
+                throw new Error('無法獲取公車路線');
+            }
+        } catch (error) {
+            // 備用方案：直線路徑
+            const busPath = L.polyline([
+                [fromCoords.latitude, fromCoords.longitude],
+                [toCoords.latitude, toCoords.longitude]
+            ], {
+                color: '#ffc107',
+                weight: 5,
+                opacity: 0.8
+            }).addTo(this.routeLayer);
+            
+            busPath.bindPopup(`
+                <b>🚌 ${segment.line} 號公車</b><br>
+                ${segment.from.name} → ${segment.to.name}<br>
+                ${segment.duration}分鐘 • ${segment.distance}km
+            `);
+        }
     }
 
     async drawTaxiSegment(segment) {
@@ -497,25 +573,58 @@ class TransportApp {
 
     async getRouteGeometry(start, end, mode) {
         try {
-            // 使用 OpenRouteService 免費 API 獲取路線幾何
-            // 注意：這需要註冊免費 API key，這裡提供備用方案
+            // 檢查距離，如果太近就直接返回直線
+            const distance = this.calculateDistance(start.lat, start.lng, end.lat, end.lng);
+            if (distance < 0.5) { // 小於 500 公尺
+                return [[start.lat, start.lng], [end.lat, end.lng]];
+            }
             
-            // 備用方案：使用 OSRM 免費路線服務
+            // 使用 OSRM 免費路線服務
             const profile = this.getOSRMProfile(mode);
             const url = `https://router.project-osrm.org/route/v1/${profile}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
             
-            const response = await fetch(url);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超時
+            
+            const response = await fetch(url, { 
+                signal: controller.signal,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
             const data = await response.json();
             
-            if (data.routes && data.routes[0] && data.routes[0].geometry) {
+            if (data.routes && data.routes[0] && data.routes[0].geometry && data.routes[0].geometry.coordinates) {
                 // 轉換 GeoJSON 座標為 Leaflet 格式
-                return data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                const coordinates = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                if (coordinates.length > 1) {
+                    return coordinates;
+                }
             }
         } catch (error) {
-            console.warn('無法獲取路線幾何，使用直線路徑:', error);
+            console.warn(`無法獲取 ${mode} 路線幾何:`, error.message);
         }
         
-        return null;
+        // 備用方案：返回直線
+        return [[start.lat, start.lng], [end.lat, end.lng]];
+    }
+
+    calculateDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371; // 地球半徑（公里）
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
     }
 
     getOSRMProfile(mode) {
