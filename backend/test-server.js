@@ -24,6 +24,7 @@ app.post('/api/routes', (req, res) => {
       type: '最快路線 (直達)',
       totalTime: 28,
       totalCost: 25,
+      totalDistance: 15.5,
       transfers: 0,
       segments: [
         {
@@ -59,6 +60,7 @@ app.post('/api/routes', (req, res) => {
       type: '轉乘路線 (經忠孝復興)',
       totalTime: 32,
       totalCost: 25,
+      totalDistance: 15.2,
       transfers: 1,
       segments: [
         {
@@ -104,6 +106,7 @@ app.post('/api/routes', (req, res) => {
       type: '松山新店線路線',
       totalTime: 38,
       totalCost: 25,
+      totalDistance: 18.4,
       transfers: 1,
       segments: [
         {
@@ -149,6 +152,7 @@ app.post('/api/routes', (req, res) => {
       type: '計程車直達',
       totalTime: 25,
       totalCost: 350,
+      totalDistance: 15.2,
       transfers: 0,
       segments: [
         {
@@ -168,6 +172,7 @@ app.post('/api/routes', (req, res) => {
       type: '公車路線',
       totalTime: 55,
       totalCost: 15,
+      totalDistance: 16.8,
       transfers: 1,
       segments: [
         {

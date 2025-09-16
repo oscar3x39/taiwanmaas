@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./start-demo.sh:*)",
+      "Read(//Users/oscarlee/Desktop/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
