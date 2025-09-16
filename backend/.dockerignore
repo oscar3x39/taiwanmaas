@@ -1,0 +1,21 @@
+# Backend specific Docker ignore
+node_modules
+dist
+logs
+*.log
+.env*
+coverage
+.nyc_output
+test
+tests
+__tests__
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+.eslintrc*
+.prettierrc*
+jest.config.*
+tsconfig.json
+README.md
+docs

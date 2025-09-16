@@ -1,0 +1,344 @@
+# ===========================================
+# 🚇 台灣交通路線規劃系統 - Git 忽略設定
+# ===========================================
+
+# ===========================================
+# 📦 Dependencies & Package Management
+# ===========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Package lock files (keep only one type)
+# package-lock.json  # 取消註解如果使用 yarn
+# yarn.lock         # 取消註解如果使用 npm
+# pnpm-lock.yaml    # 取消註解如果使用其他
+
+# ===========================================
+# 🌍 Environment Variables & Configuration
+# ===========================================
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+
+# API Keys (安全考量)
+.env.keys
+config/keys.json
+secrets/
+
+# ===========================================
+# 🏗️ Build Outputs & Compiled Files
+# ===========================================
+dist/
+build/
+out/
+*.tsbuildinfo
+backend/dist/
+frontend/build/
+frontend/dist/
+
+# TypeScript compiled files
+*.js.map
+*.d.ts.map
+
+# ===========================================
+# 📝 Logs & Runtime Data
+# ===========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ===========================================
+# 🧪 Testing & Coverage
+# ===========================================
+coverage/
+*.lcov
+.nyc_output
+test-results/
+junit.xml
+.coverage
+
+# Jest
+jest-coverage/
+
+# ===========================================
+# 📚 Documentation Generated Files
+# ===========================================
+docs/generated/
+api-docs/generated/
+
+# ===========================================
+# 🐳 Docker & Container Files
+# ===========================================
+# Docker override files
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Docker volumes data
+docker-data/
+volumes/
+
+# ===========================================
+# 🗄️ Database & Cache Files
+# ===========================================
+# Redis
+dump.rdb
+redis-data/
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# MongoDB
+mongodb-data/
+
+# ===========================================
+# 🛠️ Development Tools & IDE
+# ===========================================
+# VS Code
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+!.vscode/tasks.json
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ===========================================
+# 💻 Operating System Files
+# ===========================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ===========================================
+# 🔧 Build Tools & Package Managers
+# ===========================================
+# npm
+.npm
+.npmrc
+
+# Yarn
+.yarn-integrity
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# pnpm
+.pnpm-debug.log*
+
+# ===========================================
+# 📦 Bundler & Build Tool Cache
+# ===========================================
+.cache/
+.parcel-cache/
+.webpack/
+.rollup.cache/
+.vite/
+
+# Next.js
+.next/
+out/
+
+# Nuxt.js
+.nuxt/
+.output/
+
+# Gatsby
+.cache/
+public/
+
+# Storybook
+.out/
+.storybook-out/
+storybook-static/
+
+# ===========================================
+# 🚀 Deployment & Production
+# ===========================================
+# Vercel
+.vercel
+
+# Netlify
+.netlify/
+
+# AWS
+.aws/
+
+# Heroku
+.heroku/
+
+# ===========================================
+# 🧹 Temporary & Backup Files
+# ===========================================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+
+# ===========================================
+# 🔒 Security & Sensitive Data
+# ===========================================
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# SSH keys
+id_rsa
+id_rsa.pub
+known_hosts
+
+# ===========================================
+# 📊 Analytics & Monitoring
+# ===========================================
+# Google Analytics
+ga-*.json
+
+# Sentry
+.sentryclirc
+
+# ===========================================
+# 🎯 Project Specific
+# ===========================================
+# 台灣交通資料快取
+cache/transport-data/
+cache/mrt-schedules/
+cache/bus-routes/
+
+# 地圖圖資快取
+cache/map-tiles/
+cache/route-geometry/
+
+# 測試資料
+test-data/generated/
+mock-data/temp/
+
+# 開發用腳本產生的檔案
+scripts/generated/
+scripts/temp/
+
+# 本地開發設定
+.local/
+local/
+dev-config/
+
+# 效能測試結果
+performance-results/
+benchmark-results/
+
+# ===========================================
+# 📱 Mobile Development (如果有)
+# ===========================================
+# React Native
+.expo/
+.expo-shared/
+
+# Cordova
+platforms/
+plugins/
+www/
+
+# ===========================================
+# 🎨 Design & Assets (大檔案)
+# ===========================================
+# 設計檔案
+*.psd
+*.ai
+*.sketch
+*.fig
+
+# 大型媒體檔案
+*.mov
+*.mp4
+*.avi
+*.mkv
+
+# 但保留小型示例圖片
+!screenshots/*.png
+!screenshots/*.jpg
+!docs/images/*.png
+!docs/images/*.jpg
+
+# ===========================================
+# 🔍 Search & Index Files
+# ===========================================
+.vscode/search.cache
+.idea/sonarlint/
+
+# ===========================================
+# 📈 Monitoring & Profiling
+# ===========================================
+# Chrome DevTools
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+
+# Node.js profiling
+isolate-*-v8.log
+
+# ===========================================
+# 🌐 Internationalization
+# ===========================================
+# Translation files (if auto-generated)
+locales/generated/
+i18n/compiled/
